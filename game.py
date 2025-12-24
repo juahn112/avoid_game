@@ -1,5 +1,17 @@
+import os
+import sys
 import pygame
 import random
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 #초기화
 pygame.init()
@@ -14,20 +26,20 @@ alpha_direction = -5
 clock = pygame.time.Clock()
 running = True
 FPS = 60
-game_font = pygame.font.Font('font/The Jamsil 4 Medium.ttf', 36)
+game_font = pygame.font.Font(resource_path('font/The Jamsil 4 Medium.ttf'), 36)
 start_ticks = pygame.time.get_ticks()
 
 #이미지 설정
-background_img = pygame.image.load("img/upscaling_image.png")
+background_img = pygame.image.load(resource_path("img/upscaling_image.png"))
 background_img = pygame.transform.scale(background_img, size)
-player_img = pygame.image.load("img/player.png")
-enemy_img = pygame.image.load("img/enemy.png")
+player_img = pygame.image.load(resource_path("img/player.png"))
+enemy_img = pygame.image.load(resource_path("img/enemy.png"))
 
 #SOUND 설정
-base_bgm = pygame.mixer.Sound("bgm/bgm.ogg")
+base_bgm = pygame.mixer.Sound(resource_path("bgm/bgm.ogg"))
 base_bgm.set_volume(0.5)
 
-fail_sound = pygame.mixer.Sound("bgm/fail_3.mp3")
+fail_sound = pygame.mixer.Sound(resource_path("bgm/fail_3.mp3"))
 fail_sound.set_volume(0.7)
 
 #플레이어 설정
@@ -62,6 +74,7 @@ class Enemy:
 
     def draw(self, screen):
         screen.blit(self.img, self.rect)
+
 
 def start_game():
     global start_ticks, is_playing
