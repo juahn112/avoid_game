@@ -8,6 +8,8 @@ screen = pygame.display.set_mode(size)
 pygame.display.set_caption("신소명 피하기")
 is_playing = False
 seconds = 0
+alpha = 255
+alpha_direction = -5
 
 clock = pygame.time.Clock()
 running = True
@@ -98,9 +100,23 @@ while running:
     player.draw(screen)
     if is_playing:
         player.handle_keys()
-    else:
+    elif seconds == 0:
         intro_text = game_font.render("스페이스바를 눌러 게임 시작", True, (255, 255, 255))
+        intro_text.set_alpha(alpha)
+        alpha += alpha_direction
+        if alpha <= 0 or alpha >= 255:
+            alpha_direction *= -1
         screen.blit(intro_text, (size[0] // 2 - intro_text.get_width() // 2, size[1] // 2 - intro_text.get_height() // 2))
+    else:
+        over_text = game_font.render(f"게임 오버! 당신은 {seconds}초 동안 버텼습니다.", True, (255, 0, 0))
+        retry_text = game_font.render("스페이스바를 눌러 다시 시작", True, (255, 255, 255))
+        over_text.set_alpha(alpha)
+        retry_text.set_alpha(alpha)
+        alpha += alpha_direction
+        if alpha <= 0 or alpha >= 255:
+            alpha_direction *= -1
+        screen.blit(over_text, (size[0] // 2 - over_text.get_width() // 2, size[1] // 2 - over_text.get_height() // 2))
+        screen.blit(retry_text, (size[0] // 2 - retry_text.get_width() // 2, size[1] // 2 + 50))
 
     #적 업데이트 및 충돌 검사
     if is_playing:
