@@ -89,7 +89,7 @@ def start_game():
 player = Player()
 enemies = []
 ENEMY_EVENT = pygame.USEREVENT + 1
-pygame.time.set_timer(ENEMY_EVENT, 150)
+pygame.time.set_timer(ENEMY_EVENT, 100)
 
 #게임 루프
 while running:
