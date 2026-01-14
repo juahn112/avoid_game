@@ -22,6 +22,7 @@ is_playing = False
 seconds = 0
 alpha = 255
 alpha_direction = -5
+genaration_period = 100
 
 clock = pygame.time.Clock()
 running = True
@@ -69,10 +70,26 @@ class Enemy:
         self.rect = self.img.get_rect()
         self.rect.topleft = (random.randint(0, size[0] - 50), -50)
         self.enemy_mask = pygame.mask.from_surface(self.img)
-        self.speed = 15
+        self.speed = 0
 
     def update(self):
-        self.rect.y += self.speed
+        global genaration_period
+        if seconds < 10:
+            self.speed = 5
+            genaration_period = 300
+            self.rect.y += self.speed
+            print(f"debug: 적 속도 : {self.speed}, 생성 주기 : {genaration_period}ms")
+        elif seconds < 20:
+            self.speed = 10
+            genaration_period = 200
+            self.rect.y += self.speed
+            print(f"debug: 적 속도 : {self.speed}, 생성 주기 {genaration_period}ms")
+        else:
+            self.speed = 15
+            genaration_period = 150
+            self.rect.y += self.speed
+            print(f"debug: 적 속도 : {self.speed}, 생성 주기 {genaration_period}ms")
+
 
     def draw(self, screen):
         screen.blit(self.img, self.rect)
@@ -87,12 +104,12 @@ def start_game():
     is_playing = True
     player.alive = True
 
-
-player = Player()
-enemy = Enemy()
 enemies = []
 ENEMY_EVENT = pygame.USEREVENT + 1
-pygame.time.set_timer(ENEMY_EVENT, 100)
+pygame.time.set_timer(ENEMY_EVENT, genaration_period)
+print("debug: 적 생성 주기 설정 완료")
+player = Player()
+print("debug: 플레이어 객체 생성 완료")
 
 #게임 루프
 while running:
@@ -108,8 +125,10 @@ while running:
                 running = False
             if event.key == pygame.K_SPACE and not is_playing:
                 start_game()
+                print("debug: 게임 시작")
         if event.type == ENEMY_EVENT and player.alive and is_playing:
             enemies.append(Enemy())  
+            print("debug: 적 생성 완료")
 
     #화면 그리기
     screen.blit(background_img, (0, 0))
