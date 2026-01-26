@@ -46,7 +46,8 @@ fail_sound.set_volume(0.7)
 #플레이어 설정
 class Player:
     def __init__(self):
-        self.img = pygame.transform.scale(player_img, (70, 70))
+        self.size = (70, 70)
+        self.img = pygame.transform.scale(player_img, self.size)
         self.rect = self.img.get_rect()
         self.rect.center = (size[0] // 2, 591)
         self.player_mask = pygame.mask.from_surface(self.img)
@@ -66,9 +67,10 @@ class Player:
 #적 설정  
 class Enemy:
     def __init__(self):
-        self.img = pygame.transform.scale(enemy_img, (50, 50))
+        self.size = (25, 25)
+        self.img = pygame.transform.scale(enemy_img, self.size)
         self.rect = self.img.get_rect()
-        self.rect.topleft = (random.randint(0, size[0] - 50), -50)
+        self.rect.topleft = (random.randint(0, size[0] - 25), - 25)
         self.enemy_mask = pygame.mask.from_surface(self.img)
         self.speed = 0
 
