@@ -72,26 +72,10 @@ class Enemy:
         self.rect = self.img.get_rect()
         self.rect.topleft = (random.randint(0, size[0] - 25), - 25)
         self.enemy_mask = pygame.mask.from_surface(self.img)
-        self.speed = 0
+        self.speed = 5
 
     def update(self):
-        global genaration_period
-        if seconds < 10:
-            self.speed = 5
-            genaration_period = 300
-            self.rect.y += self.speed
-            print(f"debug: 적 속도 : {self.speed}, 생성 주기 : {genaration_period}ms")
-        elif seconds < 20:
-            self.speed = 10
-            genaration_period = 200
-            self.rect.y += self.speed
-            print(f"debug: 적 속도 : {self.speed}, 생성 주기 {genaration_period}ms")
-        else:
-            self.speed = 15
-            genaration_period = 150
-            self.rect.y += self.speed
-            print(f"debug: 적 속도 : {self.speed}, 생성 주기 {genaration_period}ms")
-
+        self.rect.y += self.speed
 
     def draw(self, screen):
         screen.blit(self.img, self.rect)
@@ -109,63 +93,58 @@ def start_game():
 enemies = []
 ENEMY_EVENT = pygame.USEREVENT + 1
 pygame.time.set_timer(ENEMY_EVENT, genaration_period)
-print("debug: 적 생성 주기 설정 완료")
 player = Player()
-print("debug: 플레이어 객체 생성 완료")
 
 #게임 루프
 while running:
     pygame.display.set_caption(f"신소명 피하기  FPS: {clock.get_fps():.2f}")
-    dt = clock.tick(FPS) / 1000
+    dt = clock.tick(FPS) / 1000     #초당 프레임 수에 맞춰 게임 속도 조절
     
     #이벤트 처리
-    for event in pygame.event.get():
+    for event in pygame.event.get():                            #이벤트 루프
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-            if event.key == pygame.K_SPACE and not is_playing:
-                start_game()
-                print("debug: 게임 시작")
-        if event.type == ENEMY_EVENT and player.alive and is_playing:
-            enemies.append(Enemy())  
-            print("debug: 적 생성 완료")
+            if event.key == pygame.K_ESCAPE:                    # ESC키를 눌렀을 때
+                running = False                                 # 게임 종료 
+            if event.key == pygame.K_SPACE and not is_playing:  # 스페이스바를 누르고 게임이 진행 중이 아닐 때
+                start_game()                                    # 게임 시작 함수 호출
+        if event.type == ENEMY_EVENT and player.alive and is_playing:   #적 생성 이벤트 발생 시 그리고 플레이어가 살아 있고 게임이 진행 중일 때
+            enemies.append(Enemy())                             #적 객체를 생성하여 적 리스트에 추가    
 
     #화면 그리기
-    screen.blit(background_img, (0, 0))
-    player.draw(screen)
-    if is_playing:
-        player.handle_keys()
-    elif seconds == 0:
-        intro_text = game_font.render("스페이스바를 눌러 게임 시작", True, (255, 255, 255))
-        intro_text.set_alpha(alpha)
-        alpha += alpha_direction
-        if alpha <= 0 or alpha >= 255:
-            alpha_direction *= -1
-        screen.blit(intro_text, (size[0] // 2 - intro_text.get_width() // 2, size[1] // 2 - intro_text.get_height() // 2))
+    screen.blit(background_img, (0, 0))                   #배경 그리기
+    player.draw(screen)                                 #플레이어 그리기
+    if is_playing:                            #게임이 진행 중일 때
+        player.handle_keys()                      #플레이어 키 입력 처리
+    elif seconds == 0:                           #시간 점수가 0일 때 (게임 시작 전)
+        intro_text = game_font.render("스페이스바를 눌러 게임 시작", True, (255, 255, 255))         #인트로 텍스트 렌더링
+        intro_text.set_alpha(alpha)     #인트로 텍스트 알파값 설정
+        alpha += alpha_direction        #인트로 텍스트 알파값 변화
+        if alpha <= 0 or alpha >= 255:  #알파값이 0 이하 또는 255 이상일 때
+            alpha_direction *= -1    #알파값 변화 방향 반전
+        screen.blit(intro_text, (size[0] // 2 - intro_text.get_width() // 2, size[1] // 2 - intro_text.get_height() // 2))  #인트로 텍스트 화면 중앙에 그리기
     else:
-        over_text = game_font.render(f"게임 오버! 당신은 {seconds}초 동안 버텼습니다.", True, (255, 0, 0))
-        retry_text = game_font.render("스페이스바를 눌러 다시 시작", True, (255, 255, 255))
-        over_text.set_alpha(alpha)
-        retry_text.set_alpha(alpha)
-        alpha += alpha_direction
-        if alpha <= 0 or alpha >= 255:
-            alpha_direction *= -1
-        screen.blit(over_text, (size[0] // 2 - over_text.get_width() // 2, size[1] // 2 - over_text.get_height() // 2))
-        screen.blit(retry_text, (size[0] // 2 - retry_text.get_width() // 2, size[1] // 2 + 50))
+        over_text = game_font.render(f"게임 오버! 당신은 {seconds}초 동안 버텼습니다.", True, (255, 0, 0))  #게임 오버 텍스트 렌더링
+        retry_text = game_font.render("스페이스바를 눌러 다시 시작", True, (255, 255, 255)) #재시작 텍스트 렌더링
+        over_text.set_alpha(alpha)  #게임 오버 텍스트 알파값 설정
+        retry_text.set_alpha(alpha) #재시작 텍스트 알파값 설정
+        alpha += alpha_direction    #알파값 변화
+        if alpha <= 0 or alpha >= 255:  #알파값이 0 이하 또는 255 이상일 때
+            alpha_direction *= -1   #알파값 변화 방향 반전
+        screen.blit(over_text, (size[0] // 2 - over_text.get_width() // 2, size[1] // 2 - over_text.get_height() // 2))     #게임 오버 텍스트 화면 중앙에 그리기
+        screen.blit(retry_text, (size[0] // 2 - retry_text.get_width() // 2, size[1] // 2 + 50))  #재시작 텍스트 화면 중앙에 그리기
 
     #적 업데이트 및 충돌 검사
-    if is_playing:
-        for enm in enemies[:]:
-            enm.update()
-            enm.draw(screen)
-            offset = (enm.rect.x - player.rect.x, enm.rect.y - player.rect.y)
+    if is_playing:                       #게임이 진행 중일 때
+        for enm in enemies[:]:               #적 리스트의 각 적에 대해
+            enm.update()                     #적 위치 업데이트
+            enm.draw(screen)            #적 그리기
+            offset = (enm.rect.x - player.rect.x, enm.rect.y - player.rect.y)   #플레이어와 적의 오프셋 계산
 
-            if player.player_mask.overlap(enm.enemy_mask, offset) and player.alive:
-                print("충돌!")
-                player.alive = False
-                is_playing = False
+            if player.player_mask.overlap(enm.enemy_mask, offset): 
+                #player.alive = False
+                #is_playing = False
                 base_bgm.stop()
                 fail_sound.play()
                 pygame.display.set_caption("게임 오버!")

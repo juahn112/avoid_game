@@ -17,25 +17,25 @@ class ScoreModel:
         conn.commit()
         conn.close()
         
-        @staticmethod
-        def add_score(name: str, score: int):
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                    INSERT INTO rankings (name, score) VALUES (?, ?)
-            ''', (name, score))
-            
-            conn.commit()
-            conn.close()
-            
-        @staticmethod
-        def get_top_scores():
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                    SELECT name, score, date FROM rankings ORDER BY score DESC LIMIT 10''')
-            rows = cursor.fetchall()
-            conn.close()
-            return rows
+    @staticmethod
+    def add_score(name: str, score: int):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+                INSERT INTO rankings (name, score) VALUES (?, ?)
+        ''', (name, score))
+        
+        conn.commit()
+        conn.close()
+        
+    @staticmethod
+    def get_top_scores():
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+                SELECT name, score, date FROM rankings ORDER BY score DESC LIMIT 10''')
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
