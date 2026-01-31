@@ -22,7 +22,7 @@ is_playing = False
 seconds = 0
 alpha = 255
 alpha_direction = -5
-genaration_period = 100
+genaration_period = 200
 
 clock = pygame.time.Clock()
 running = True
@@ -137,6 +137,17 @@ while running:
 
     #적 업데이트 및 충돌 검사
     if is_playing:                       #게임이 진행 중일 때
+        
+        if  10 < seconds <= 20:
+            genaration_period = 150
+            Enemy.speed = 10
+        elif 20 < seconds <= 30:
+            genaration_period = 100
+            Enemy.speed = 15
+        elif seconds > 30:
+            genaration_period = 75
+            Enemy.speed = 20
+            
         for enm in enemies[:]:               #적 리스트의 각 적에 대해
             enm.update()                     #적 위치 업데이트
             enm.draw(screen)            #적 그리기
@@ -144,23 +155,23 @@ while running:
 
             if player.player_mask.overlap(enm.enemy_mask, offset): 
                 #player.alive = False
-                #is_playing = False
-                base_bgm.stop()
-                fail_sound.play()
-                pygame.display.set_caption("게임 오버!")
-                enemies.clear()
+                is_playing = False
+                base_bgm.stop()         #배경음악 정지
+                fail_sound.play()       #실패 사운드 재생
+                pygame.display.set_caption("게임 오버!")        #게임 오버 캡션 설정
+                enemies.clear()        #적 리스트 초기화
             
-            if enm.rect.top > size[1]:
-                enemies.remove(enm)
+            if enm.rect.top > size[1]:      #적이 화면 밖으로 나갔을 때
+                enemies.remove(enm)     #적 리스트에서 해당 적 제거
 
-    if player.alive and is_playing:
-        seconds = (pygame.time.get_ticks() - start_ticks) // 1000
+    if player.alive and is_playing:     #플레이어가 살아 있고 게임이 진행 중일 때
+        seconds = (pygame.time.get_ticks() - start_ticks) // 1000   #경과 시간(초) 계산
 
-    else:
-        pass
+    else:   #플레이어가 죽었거나 게임이 진행 중이 아닐 때
+        pass            
     
-    timer_text = game_font.render(f"{seconds}초", True, (255, 255, 255))
-    screen.blit(timer_text, (1200, 10))
+    timer_text = game_font.render(f"{seconds}초", True, (255, 255, 255))    #타이머 텍스트 렌더링
+    screen.blit(timer_text, (1200, 10))                     #타이머 텍스트 그리기
 
-    pygame.display.update()
-pygame.quit()
+    pygame.display.update()        #화면 업데이트
+pygame.quit()                     #파이게임 종료
