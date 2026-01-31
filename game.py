@@ -22,8 +22,8 @@ is_playing = False
 seconds = 0
 alpha = 255
 alpha_direction = -5
-genaration_period = 200
-
+genaration_period = 250
+current_speed = 5
 clock = pygame.time.Clock()
 running = True
 FPS = 60
@@ -66,16 +66,16 @@ class Player:
 
 #적 설정  
 class Enemy:
-    def __init__(self):
+    def __init__(self,speed):
         self.size = (25, 25)
         self.img = pygame.transform.scale(enemy_img, self.size)
         self.rect = self.img.get_rect()
         self.rect.topleft = (random.randint(0, size[0] - 25), - 25)
         self.enemy_mask = pygame.mask.from_surface(self.img)
-        self.speed = 5
+        self.speed = speed
 
     def update(self):
-        self.rect.y += self.speed
+        self.rect.y += current_speed
 
     def draw(self, screen):
         screen.blit(self.img, self.rect)
@@ -110,7 +110,7 @@ while running:
             if event.key == pygame.K_SPACE and not is_playing:  # 스페이스바를 누르고 게임이 진행 중이 아닐 때
                 start_game()                                    # 게임 시작 함수 호출
         if event.type == ENEMY_EVENT and player.alive and is_playing:   #적 생성 이벤트 발생 시 그리고 플레이어가 살아 있고 게임이 진행 중일 때
-            enemies.append(Enemy())                             #적 객체를 생성하여 적 리스트에 추가    
+            enemies.append(Enemy(current_speed))                             #적 객체를 생성하여 적 리스트에 추가    
 
     #화면 그리기
     screen.blit(background_img, (0, 0))                   #배경 그리기
@@ -138,16 +138,6 @@ while running:
     #적 업데이트 및 충돌 검사
     if is_playing:                       #게임이 진행 중일 때
         
-        if  10 < seconds <= 20:
-            genaration_period = 150
-            Enemy.speed = 10
-        elif 20 < seconds <= 30:
-            genaration_period = 100
-            Enemy.speed = 15
-        elif seconds > 30:
-            genaration_period = 75
-            Enemy.speed = 20
-            
         for enm in enemies[:]:               #적 리스트의 각 적에 대해
             enm.update()                     #적 위치 업데이트
             enm.draw(screen)            #적 그리기
@@ -166,10 +156,37 @@ while running:
 
     if player.alive and is_playing:     #플레이어가 살아 있고 게임이 진행 중일 때
         seconds = (pygame.time.get_ticks() - start_ticks) // 1000   #경과 시간(초) 계산
+            #난이도 조절
+        if  seconds <= 10:
+            new_period = 250
+            new_speed = 5
+        elif 10 < seconds <= 20:
+            new_period = 150
+            new_speed = 10
+        elif 20 < seconds <= 30:
+            new_period = 100
+            new_speed = 15
+        elif 30 < seconds <= 35:
+            new_period = 80
+            new_speed = 20
+        elif 35 < seconds <= 40:
+            new_period = 60
+            new_speed = 25
+        else:
+            new_period = 50
+            new_speed = 30
+
+        if new_period != genaration_period:
+            genaration_period = new_period
+            pygame.time.set_timer(ENEMY_EVENT, genaration_period)
+            current_speed = new_speed
 
     else:   #플레이어가 죽었거나 게임이 진행 중이 아닐 때
         pass            
     
+    
+        
+
     timer_text = game_font.render(f"{seconds}초", True, (255, 255, 255))    #타이머 텍스트 렌더링
     screen.blit(timer_text, (1200, 10))                     #타이머 텍스트 그리기
 

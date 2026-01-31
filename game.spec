@@ -5,7 +5,7 @@ a = Analysis(
     ['game.py'],
     pathex=[],
     binaries=[],
-    datas=[('img', 'img'), ('bgm', 'bgm'), ('font', 'font')],
+    datas=[('img/*', 'img'), ('bgm/*', 'bgm'), ('font/*', 'font')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
