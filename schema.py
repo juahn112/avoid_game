@@ -4,7 +4,7 @@ class ScoreInput(BaseModel):
     name : str
     score : int
     
-class ScoreOutput(BaseModel):
+class RangkingOutput(BaseModel):
     name : str
     score : int
     date : str
