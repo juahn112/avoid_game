@@ -2,7 +2,9 @@ import os
 import sys
 import pygame
 import random
+import requests
 
+#리소스 경로 설정 함수
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -11,7 +13,6 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
-
 
 #초기화
 pygame.init()
@@ -29,6 +30,8 @@ running = True
 FPS = 60
 game_font = pygame.font.Font(resource_path('font/The Jamsil 4 Medium.ttf'), 36)
 start_ticks = pygame.time.get_ticks()
+current_scene = "NICKNAME"
+user_name = ""
 
 #이미지 설정
 background_img = pygame.image.load(resource_path("img/upscaling_image.png"))
@@ -42,6 +45,22 @@ base_bgm.set_volume(0.5)
 
 fail_sound = pygame.mixer.Sound(resource_path("bgm/fail_3.mp3"))
 fail_sound.set_volume(0.7)
+
+#점수 전송 함수
+def send_score(name, score):
+    url = "http://127.0.0.1:8000/api/submit"
+    data = {
+        "name" : name,
+        "score" : score
+    }
+    try:
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
+            print("점수 전송 성공")
+        else:
+            print(f"점수 전송 실패: {response.status_code}")
+    except Exception as e:
+        print(f"점수 전송 중 오류 발생: {e}")
 
 #플레이어 설정
 class Player:
@@ -88,7 +107,8 @@ def start_game():
     player.rect.center = (size[0] // 2, 591)
     base_bgm.play(-1)
     is_playing = True
-    player.alive = True
+    #player.alive = True
+
 
 enemies = []
 ENEMY_EVENT = pygame.USEREVENT + 1
@@ -109,14 +129,58 @@ while running:
                 running = False                                 # 게임 종료 
             if event.key == pygame.K_SPACE and not is_playing:  # 스페이스바를 누르고 게임이 진행 중이 아닐 때
                 start_game()                                    # 게임 시작 함수 호출
-        if event.type == ENEMY_EVENT and player.alive and is_playing:   #적 생성 이벤트 발생 시 그리고 플레이어가 살아 있고 게임이 진행 중일 때
+        if event.type == ENEMY_EVENT and is_playing:   #적 생성 이벤트 발생 시 그리고 플레이어가 살아 있고 게임이 진행 중일 때
             enemies.append(Enemy(current_speed))                             #적 객체를 생성하여 적 리스트에 추가    
 
     #화면 그리기
     screen.blit(background_img, (0, 0))                   #배경 그리기
     player.draw(screen)                                 #플레이어 그리기
+    
     if is_playing:                            #게임이 진행 중일 때
         player.handle_keys()                      #플레이어 키 입력 처리
+        
+        for enm in enemies[:]:               #적 리스트의 각 적에 대해
+            enm.update()                     #적 위치 업데이트
+            enm.draw(screen)            #적 그리기
+            offset = (enm.rect.x - player.rect.x, enm.rect.y - player.rect.y)   #플레이어와 적의 오프셋 계산
+
+            if player.player_mask.overlap(enm.enemy_mask, offset): #플레이어와 적이 충돌했을 때
+                is_playing = False  #게임 진행 중지
+                base_bgm.stop()         #배경음악 정지
+                fail_sound.play()       #실패 사운드 재생
+                pygame.display.set_caption("게임 오버!")        #게임 오버 캡션 설정
+                enemies.clear()        #적 리스트 초기화
+                send_score("Player", seconds)    #점수 전송 함수 호출
+            
+            if enm.rect.top > size[1]:      #적이 화면 밖으로 나갔을 때
+                enemies.remove(enm)     #적 리스트에서 해당 적 제거
+            
+            seconds = (pygame.time.get_ticks() - start_ticks) // 1000   #경과 시간(초) 계산
+                #난이도 조절
+            if  seconds <= 10:
+                new_period = 250
+                new_speed = 5
+            elif 10 < seconds <= 20:
+                new_period = 150
+                new_speed = 10
+            elif 20 < seconds <= 30:
+                new_period = 100
+                new_speed = 15
+            elif 30 < seconds <= 35:
+                new_period = 100
+                new_speed = 20
+            elif 35 < seconds <= 40:
+                new_period = 100
+                new_speed = 23
+            else:
+                new_period = 50
+                new_speed = 35
+
+            if new_period != genaration_period:
+                genaration_period = new_period
+                pygame.time.set_timer(ENEMY_EVENT, genaration_period)
+                current_speed = new_speed
+
     elif seconds == 0:                           #시간 점수가 0일 때 (게임 시작 전)
         intro_text = game_font.render("스페이스바를 눌러 게임 시작", True, (255, 255, 255))         #인트로 텍스트 렌더링
         intro_text.set_alpha(alpha)     #인트로 텍스트 알파값 설정
@@ -135,58 +199,9 @@ while running:
         screen.blit(over_text, (size[0] // 2 - over_text.get_width() // 2, size[1] // 2 - over_text.get_height() // 2))     #게임 오버 텍스트 화면 중앙에 그리기
         screen.blit(retry_text, (size[0] // 2 - retry_text.get_width() // 2, size[1] // 2 + 50))  #재시작 텍스트 화면 중앙에 그리기
 
-    #적 업데이트 및 충돌 검사
-    if is_playing:                       #게임이 진행 중일 때
-        
-        for enm in enemies[:]:               #적 리스트의 각 적에 대해
-            enm.update()                     #적 위치 업데이트
-            enm.draw(screen)            #적 그리기
-            offset = (enm.rect.x - player.rect.x, enm.rect.y - player.rect.y)   #플레이어와 적의 오프셋 계산
-
-            if player.player_mask.overlap(enm.enemy_mask, offset): 
-                #player.alive = False
-                is_playing = False
-                base_bgm.stop()         #배경음악 정지
-                fail_sound.play()       #실패 사운드 재생
-                pygame.display.set_caption("게임 오버!")        #게임 오버 캡션 설정
-                enemies.clear()        #적 리스트 초기화
-            
-            if enm.rect.top > size[1]:      #적이 화면 밖으로 나갔을 때
-                enemies.remove(enm)     #적 리스트에서 해당 적 제거
-
-    if player.alive and is_playing:     #플레이어가 살아 있고 게임이 진행 중일 때
-        seconds = (pygame.time.get_ticks() - start_ticks) // 1000   #경과 시간(초) 계산
-            #난이도 조절
-        if  seconds <= 10:
-            new_period = 250
-            new_speed = 5
-        elif 10 < seconds <= 20:
-            new_period = 150
-            new_speed = 10
-        elif 20 < seconds <= 30:
-            new_period = 100
-            new_speed = 15
-        elif 30 < seconds <= 35:
-            new_period = 80
-            new_speed = 20
-        elif 35 < seconds <= 40:
-            new_period = 60
-            new_speed = 25
-        else:
-            new_period = 50
-            new_speed = 30
-
-        if new_period != genaration_period:
-            genaration_period = new_period
-            pygame.time.set_timer(ENEMY_EVENT, genaration_period)
-            current_speed = new_speed
-
-    else:   #플레이어가 죽었거나 게임이 진행 중이 아닐 때
-        pass            
+                
     
-    
-        
-
+    #타이머 그리기
     timer_text = game_font.render(f"{seconds}초", True, (255, 255, 255))    #타이머 텍스트 렌더링
     screen.blit(timer_text, (1200, 10))                     #타이머 텍스트 그리기
 
